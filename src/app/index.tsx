@@ -1,34 +1,24 @@
-import { StyleSheet, Text, View } from "react-native";
-
+import { Text, View } from "react-native";
+import {Ionicons} from "@expo/vector-icons"
+import {Link} from 'expo-router'
+import { useEffect } from "react";
+import { supabase } from "../lib/supabase";
 export default function Page() {
+  useEffect(()=>{
+    supabase.from('events').select('*,assets(*)').then((data)=>console.log(JSON.stringify(data,null,2)));
+  },[]);
   return (
-    <View style={styles.container}>
-      <View style={styles.main}>
-        <Text style={styles.title}>Hello World</Text>
-        <Text style={styles.subtitle}>This is the first page of your app.</Text>
-      </View>
+    <View className="flex-1 justify-center items-center gap-4">
+     
+     
+     {/* <Ionicons name="add" size={24} color="white"/> */}
+     <Link href="/camera" className="text-white">
+      Open Camera
+     </Link>
+     <Link href="/event" className="text-white">
+      Event details
+     </Link>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    padding: 24,
-  },
-  main: {
-    flex: 1,
-    justifyContent: "center",
-    maxWidth: 960,
-    marginHorizontal: "auto",
-  },
-  title: {
-    fontSize: 64,
-    fontWeight: "bold",
-  },
-  subtitle: {
-    fontSize: 36,
-    color: "#38434D",
-  },
-});
