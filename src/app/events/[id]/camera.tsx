@@ -3,12 +3,36 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState ,useRef} from 'react';
 import { ActivityIndicator, Button, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { uploadToCloudinary } from '../lib/cloudinary';
+import { uploadToCloudinary } from '@/lib/cloudinary';
+import { useLocalSearchParams } from 'expo-router';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { insertAsset } from '@/services/assets';
+import { useAuth } from '@/providers/AuthProvider';
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
 
+// const {id}=useLocalSearchParams<{id:string}>();
+// console.log("ID :",id)
+const {id} = useLocalSearchParams<{id:string}>();
+const {user}=useAuth();
+const queryClient=useQueryClient();
 
+const insertAssetMutation=useMutation({
+  mutationFn:(assetId:string)=>insertAsset({event_id:id,user_id:user?.id,asset_id:assetId}),
+  onSuccess:()=>{
+    queryClient.invalidateQueries({queryKey:['events',id]})
+  }
+})
+
+// Add this safety check
+if (!id || Array.isArray(id)) {
+  return (
+    <View className="flex-1 items-center justify-center">
+      <Text className="text-white">Invalid event ID</Text>
+    </View>
+  );
+}
   const camera =useRef<CameraView>(null)
   if (!permission) {
     // Camera permissions are still loading.
@@ -37,6 +61,8 @@ export default function CameraScreen() {
     const cloudinaryResponse=await uploadToCloudinary(photo.uri)
 
     console.log(JSON.stringify(cloudinaryResponse,null,2))
+
+    insertAssetMutation.mutate(cloudinaryResponse.public_id)
   }
 
   return (
